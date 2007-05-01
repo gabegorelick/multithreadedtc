@@ -43,7 +43,7 @@ import junit.framework.TestSuite;
  * Since the test case threads are placed in a new thread group, any other threads
  * created by these test cases will be placed in this thread group by default. All 
  * threads in the thread group will be considered by the clock thread when deciding 
- * whether to advance the clock, declare a deadlock, or timeout.
+ * whether to advance the clock, declare a deadlock, or stop a long-running test.
  * 
  * <p>
  * The framework catches exceptions thrown in the threads and propagates them to
@@ -110,6 +110,38 @@ public class TestFramework {
 		if (v != null)
 			System.setProperty(RUNLIMIT_KEY, v.toString());
 	}
+	
+	
+	
+	public static void runInstrumentedManyTimes(final MultithreadedTestCase test, int count, 
+			int [] failureCount) throws Throwable {
+		int failures = 0;
+		Throwable t = null;
+		boolean failed = false;
+		
+		System.out.println("Testing " + test.getClass());
+		
+		for (int i = 0; i < count; i++) {
+			try {
+				runOnce(test);
+			} catch (Throwable e) {
+				failed = true;
+				failures++;
+				if (t == null)
+					t = e;
+			}
+			if (i%10 == 9) {
+				if (failed) { System.out.print("f"); failed=false; }
+				else System.out.print(".");
+				if (i%100 == 99) System.out.println(" " + (i+1));
+			}
+		}
+		if (t!=null) {
+			if (failureCount != null) failureCount[0] = failures;
+			throw t;
+		}
+	}
+
 	
 	/**
 	 * Run multithreaded test case multiple times using the default or global settings
@@ -278,6 +310,8 @@ public class TestFramework {
 			public void run() {
 				try {
 					long lastProgress = System.currentTimeMillis();
+					int deadlocksDetected = 0;
+					int readyToTick = 0;
 					while (true) {
 						
 						Thread.sleep(clockPeriod);
@@ -340,6 +374,10 @@ public class TestFramework {
 
 								// Check for timeout conditions and restart the loop
 								if (checkProgress) {
+									if (readyToTick > 0) {
+										System.out.println("Was Ready to tick too early");
+										readyToTick = 0;
+									}
 									long now = System.currentTimeMillis();
 									if (now - lastProgress > 1000L * runLimit) {
 										test.failed = true;
@@ -350,11 +388,24 @@ public class TestFramework {
 										mainThread.interrupt();
 										return;
 									}
+									deadlocksDetected = 0;
 									continue;
 								}
 								
 								// Detect deadlock
 								if (nextTick == Integer.MAX_VALUE) {
+									if (readyToTick > 0) {
+										System.out.println("Was Ready to tick too early");
+										readyToTick = 0;
+									}
+									if (++deadlocksDetected < 50) {
+										if (deadlocksDetected % 10 == 0)
+											System.out.println("[Detecting deadlock... " + 
+													deadlocksDetected + " trys]");
+										continue;
+									}
+									System.out.println("Deadlock!");
+									
 									StringWriter sw = new StringWriter();
 									PrintWriter out = new PrintWriter(sw);
 									for (Map.Entry<Thread, Integer> e : test.threads
@@ -374,6 +425,13 @@ public class TestFramework {
 									mainThread.interrupt();
 									return;
 								}
+								
+								deadlocksDetected = 0;
+								
+								if (++readyToTick < 2) {
+									continue;
+								}
+								readyToTick = 0; 
 								
 								// Advance to next tick
 								test.clock = nextTick;

@@ -163,7 +163,7 @@ abstract public class MultithreadedTestCase extends Assert implements Test {
 	
 	/**
 	 * This method is called just before a testcase thread completes.
-	 * It cleans out {@link #currentTestCase} and {@link #threads}.
+	 * It cleans out {@link #currentTestCase} and {@link #threads}. 
 	 */
 	void goodbye() {
 		synchronized (lock) {
