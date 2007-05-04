@@ -678,9 +678,9 @@ public class TestFramework {
 				Object outerInstance = mainCons.newInstance(ONULL);
 				Test test = (Test) cons.newInstance( new Object[]{outerInstance} );
 				
-				if (outerInstance instanceof TestCase && test instanceof MultithreadedTestCase)
+				if (outerInstance instanceof TestCase && test instanceof MultithreadedTest)
 					addSetUpAndTearDown( 
-							(MultithreadedTestCase) test, 
+							(MultithreadedTest) test, 
 							(TestCase) outerInstance );
 				
         		suite.addTest(test);
@@ -700,16 +700,15 @@ public class TestFramework {
 	 * the Test, otherwise it does little good to call the "setUp" and "tearDown"
 	 * method in the TestCase.
 	 * 
-	 * @param t
+	 * @param mtc
 	 * 			the test to update
 	 * @param tc
 	 * 			the TestCase that contains the setUp and tearDown methods called
 	 * @throws
 	 * 			Any exceptions that occur along the process. In this case, just
 	 * 			use the old uninstrumented Test.
-	 * @return
 	 */
-	public static void addSetUpAndTearDown(MultithreadedTestCase mtc, TestCase tc) 
+	public static void addSetUpAndTearDown(MultithreadedTest mtc, TestCase tc) 
 			throws SecurityException, NoSuchMethodException
 	{		
 		Method setUp = null, tearDown = null;
