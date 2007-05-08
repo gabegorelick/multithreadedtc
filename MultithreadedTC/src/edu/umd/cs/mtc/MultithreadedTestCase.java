@@ -1,6 +1,5 @@
 package edu.umd.cs.mtc;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.concurrent.TimeUnit;
@@ -8,10 +7,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import junit.framework.Assert;
-import junit.framework.Protectable;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestResult;
 
 
 /**

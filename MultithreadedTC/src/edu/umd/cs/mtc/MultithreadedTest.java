@@ -10,9 +10,22 @@ import junit.framework.TestResult;
 /**
  * Extends {@link MultithreadedTestCase} by implementing 
  * {@link junit.framework.Test} so that tests can be added to a 
- * TestSuite
+ * TestSuite. 
+ * 
+ * <p>
+ * When using this class, the default behavior
+ * is to run the test once. To change this default behavior, 
+ * override {@link #runTest()}. For example, to run a test 20
+ * times, override:
+ * 
+ * <pre><code>
+ * 	public void runTest() throws Throwable {
+ * 		TestFramework.runManyTimes(this, 20);
+ * 	}
+ * </code></pre>
  * 
  * @see MultithreadedTestCase
+ * @see #runTest()
  * 
  * @author William Pugh
  * @author Nathaniel Ayewah
@@ -73,8 +86,7 @@ public abstract class MultithreadedTest extends MultithreadedTestCase implements
 	 * @throws Throwable if any exception is thrown
 	 */
 	public void runTest() throws Throwable {
-		//TestFramework.runOnce( this );
-		TestFramework.runManyTimes(this, 20);
+		TestFramework.runOnce( this );
 	}
 		
 	/**

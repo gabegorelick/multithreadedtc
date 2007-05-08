@@ -34,7 +34,12 @@ import junit.framework.TestSuite;
  * finished. The thread methods are run in a new thread group, and are regulated by a
  * separate clock thread. The clock thread checks periodically to see if all threads are 
  * blocked. If all threads are blocked and at least one is waiting for a tick, the clock
- * thread advances the clock to the next desired tick. The clock thread also detects 
+ * thread advances the clock to the next desired tick. (A slight delay -- about a
+ * clock period -- is applied before advancing the clock to ensure that this is not done
+ * prematurely and any threads trying to unblock are given a chance to do so.)
+ * 
+ * <p>
+ * The clock thread also detects 
  * deadlock (when all threads are blocked, none are waiting for a tick, and none are in
  * state TIMED_WAITING), and can stop a test that is going on too long (a thread is in
  * state RUNNABLE for too long.)
@@ -109,10 +114,27 @@ public class TestFramework {
 	public static void setGlobalRunLimit(Integer v) {
 		if (v != null)
 			System.setProperty(RUNLIMIT_KEY, v.toString());
-	}
+	}	
 	
 	
-	
+	/**
+	 * Run multithreaded test case multiple times using the default or global settings
+	 * for clock period and run limit. This method adds instrumentation to count the 
+	 * number of times failures occur (an exception is thrown). If the array
+	 * <code>failureCount</code> is initialized to be of at least size 1, it returns 
+	 * this count in <code>failureCount[0]</code>. If failures do occur, it saves the
+	 * first failure, and then throws it after running the test <code>count</code> times.	 
+	 * 
+	 * @param test
+	 *            The multithreaded test case to run
+	 * @param count
+	 *            the number of times to run the test case
+	 * @param failureCount
+	 * 			  if this array is initialzed to at least size 1, the number of failures
+	 * 			  is returned in <code>failureCount[0]</code>
+	 * @throws Throwable
+	 * 			  if there is at least one failure -- the first failure is thrown
+	 */
 	public static void runInstrumentedManyTimes(final MultithreadedTestCase test, int count, 
 			int [] failureCount) throws Throwable {
 		int failures = 0;
@@ -136,10 +158,10 @@ public class TestFramework {
 				if (i%100 == 99) System.out.println(" " + (i+1));
 			}
 		}
-		if (t!=null) {
-			if (failureCount != null) failureCount[0] = failures;
+		if (failureCount != null && failureCount.length > 0) 
+			failureCount[0] = failures;
+		if (t!=null)
 			throw t;
-		}
 	}
 
 	
@@ -153,6 +175,9 @@ public class TestFramework {
 	 *            The multithreaded test case to run
 	 * @param count
 	 *            the number of times to run the test case
+	 * @throws Throwable
+	 * 			  -- if any of the test runs fails, the exception is thrown immediately
+	 * 			  without completing the rest of the test runs.
 	 */
 	public static void runManyTimes(final MultithreadedTestCase test, int count)
 			throws Throwable {
@@ -174,6 +199,9 @@ public class TestFramework {
 	 * @param runLimit
 	 * 			  The limit to run the test in seconds (or null for default or
 	 * 			  global setting)
+	 * @throws Throwable
+	 * 			  -- if any of the test runs fails, the exception is thrown immediately
+	 * 			  without completing the rest of the test runs.
 	 */
 	public static void runManyTimes(final MultithreadedTestCase test, int count,
 			Integer clockPeriod, Integer runLimit)
@@ -189,6 +217,8 @@ public class TestFramework {
 	 * 
 	 * @param test
 	 *            The multithreaded test case to run
+	 * @throws Throwable
+	 * 			  if the test runs fails or causes an exception
 	 */
 	public static void runOnce(final MultithreadedTestCase test)
 			throws Throwable {
@@ -206,6 +236,8 @@ public class TestFramework {
 	 * @param runLimit
 	 * 			  The limit to run the test in seconds (or null for default or
 	 * 			  global setting)
+	 * @throws Throwable
+	 * 			  if the test runs fails or causes an exception
 	 */
 	public static void runOnce(final MultithreadedTestCase test, 
 			Integer clockPeriod, Integer runLimit)
@@ -375,7 +407,8 @@ public class TestFramework {
 								// Check for timeout conditions and restart the loop
 								if (checkProgress) {
 									if (readyToTick > 0) {
-										System.out.println("Was Ready to tick too early");
+										if (test.getTrace())
+											System.out.println("Was Ready to tick too early");
 										readyToTick = 0;
 									}
 									long now = System.currentTimeMillis();
@@ -395,16 +428,17 @@ public class TestFramework {
 								// Detect deadlock
 								if (nextTick == Integer.MAX_VALUE) {
 									if (readyToTick > 0) {
-										System.out.println("Was Ready to tick too early");
+										if (test.getTrace()) 
+											System.out.println("Was Ready to tick too early");
 										readyToTick = 0;
 									}
 									if (++deadlocksDetected < 50) {
-										if (deadlocksDetected % 10 == 0)
+										if (deadlocksDetected % 10 == 0 && test.getTrace())
 											System.out.println("[Detecting deadlock... " + 
 													deadlocksDetected + " trys]");
 										continue;
 									}
-									System.out.println("Deadlock!");
+									if (test.getTrace()) System.out.println("Deadlock!");
 									
 									StringWriter sw = new StringWriter();
 									PrintWriter out = new PrintWriter(sw);
