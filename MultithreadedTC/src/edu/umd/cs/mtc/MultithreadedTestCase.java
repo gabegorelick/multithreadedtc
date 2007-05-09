@@ -2,6 +2,7 @@ package edu.umd.cs.mtc;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -436,4 +437,42 @@ abstract public class MultithreadedTestCase extends Assert {
 	
 	}
 	
+	
+	// ==================
+	// -- Experimental --
+	// -- - - - - - - - -
+	
+	/**
+	 * A ThreadLocal that contains a Random number generator. This is used
+	 * in {@link #mayYield()}
+	 * 
+	 *  @see #mayYield()
+	 */
+	private static ThreadLocal<Random> mtcRandomizer = new ThreadLocal<Random>() {
+		@Override
+		public Random initialValue() {
+			return new Random();
+		}
+	};
+	
+	/**
+	 * Calling this method from one of the test threads may cause the 
+	 * thread to yield. Use this between statements to generate more 
+	 * interleavings.
+	 */
+	public void mayYield() {			
+		mayYield(0.5);
+	}
+
+	/**
+	 * Calling this method from one of the test threads may cause the 
+	 * thread to yield. Use this between statements to generate more 
+	 * interleavings.
+	 * 
+	 * @param probability
+	 * 			(a number between 0 and 1) the likelihood that Thread.yield() is called
+	 */
+	public void mayYield(double probability) {			
+		if (mtcRandomizer.get().nextDouble() < probability) Thread.yield();
+	}
 }

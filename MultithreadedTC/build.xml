@@ -1,0 +1,27 @@
+<project name="MultithreadedTC" default="distjar" basedir=".">
+
+	<property name="release.id" value="1.0" />
+
+	<!-- Create distribution jar -->
+	<target name="distjar">
+		<jar destfile="MultithreadedTC-${release.id}.jar" update="true">
+			<fileset dir="bin" includes="edu/**/*class" />
+			<fileset dir="." includes="README.txt,LICENSE.txt" />
+		</jar>
+	</target>
+	
+	<!-- Create Source Distribution jar -->
+	<target name="sourcezip" depends="distjar">
+		<zip destfile="MultithreadedTC-${release.id}-source.zip" update="true">
+			<fileset dir="." includes="src/**" excludes="**.svn**" />
+			<fileset dir="." includes="examples/**" excludes="**.svn**" />
+			<fileset dir="." includes="web/**" excludes="**.svn**" />
+			<fileset dir="." includes="README.txt,LICENSE.txt" />
+			<fileset dir="." includes=".project,.classpath,build.xml" />
+			<fileset dir="." includes="MultithreadedTC-1.0.jar" />
+		</zip>
+	</target>
+	
+	
+
+</project>
