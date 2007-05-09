@@ -1,6 +1,7 @@
 <project name="MultithreadedTC" default="distjar" basedir=".">
 
 	<property name="release.id" value="1.0" />
+	<property name="sourcename" value="MultithreadedTC-${release.id}-source" />
 
 	<!-- Create distribution jar -->
 	<target name="distjar">
@@ -10,18 +11,24 @@
 		</jar>
 	</target>
 	
-	<!-- Create Source Distribution jar -->
+	<!-- Create Source Distribution zip -->
 	<target name="sourcezip" depends="distjar">
 		<zip destfile="MultithreadedTC-${release.id}-source.zip" update="true">
-			<fileset dir="." includes="src/**" excludes="**.svn**" />
-			<fileset dir="." includes="examples/**" excludes="**.svn**" />
-			<fileset dir="." includes="web/**" excludes="**.svn**" />
-			<fileset dir="." includes="README.txt,LICENSE.txt" />
-			<fileset dir="." includes=".project,.classpath,build.xml" />
-			<fileset dir="." includes="MultithreadedTC-1.0.jar" />
+			<zipfileset dir="." includes="src/**" excludes="**.svn**" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="examples/**" excludes="**.svn**" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="web/**" excludes="**.svn**,sanity/**" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="README.txt,LICENSE.txt" prefix="${sourcename}"/>
+			<zipfileset dir="." includes=".project,.classpath,build.xml" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="MultithreadedTC-1.0.jar" prefix="${sourcename}"/>
 		</zip>
 	</target>
 	
+	<!-- Create Website distribution zip -->
+	<target name="webzip">
+		<zip destfile="MultithreadedTCWebsite.zip" update="true">
+			<fileset dir="web" includes="**" excludes="**.svn**" />
+		</zip>
+	</target>
 	
 
 </project>

@@ -13,15 +13,15 @@
 
 <link rel="stylesheet" href="images/Envision.css" type="text/css" />
 
-<title>MultithreadedTC :: Department of Computer Science, University of Maryland</title>
+<title>Overview of MultithreadedTC - Dept. of Computer Science, UMD</title>
 
 </head>
 
 <body>
-<a name="pagetop"></a>
 
 <!-- wrap starts here -->
 <div id="wrap">
+<a name="pagetop"></a>
 
 		<!--header -->
 		<div id="header">
@@ -90,19 +90,19 @@
 				
 				<blockquote><p><strong>MultithreadedTC</strong> is a framework for testing concurrent applications. It
 				features a metronome that is used to provide fine control over the sequence of
-				activites in multiple threads.</p></blockquote>
+				activities in multiple threads.</p></blockquote>
 				
 				<p class="quicklink">(OK I think I get it. <a href="#examples4">Take me straight to some examples.</a>)</p>
 				
 				<p>Many failures in concurrent applications are not deterministic. They do not
-				occur every time. Different interleavings of application threads yield different
+				occur every time the application is run. Different interleavings of application threads yield different
 				behaviors.</p>
 				<p>Concurrent application designers often want to run many (unrelated or loosely
 				related) threads of activity to maximize throughput. Sometimes it is useful for
 				test designers to mimic this style and run multiple threads, generating as many
 				interleavings as possible. Many test frameworks support this paradigm (e.g.
 				<a href="http://www.alphaworks.ibm.com/tech/contest">IBM's ConTest</a>, 
-				<a href="http://groboutils.sourceforge.net/testing-junit/using_mtt.html">GroboUtils MultiThreadedTestRunner</a>, 
+				<a href="http://groboutils.sourceforge.net/testing-junit/using_mtt.html">GroboUtils' MultiThreadedTestRunner</a>, 
 				and
 				<a href="http://junit.sourceforge.net/javadoc/junit/extensions/ActiveTestSuite.html">
 				JUnit's ActiveTestSuite</a>).</p>
@@ -127,7 +127,7 @@
 				
 				<p>We want a test to confirm that <code>put 17</code> causes Thread 1 to block until
 				<code>take 42</code> occurs in Thread 2. The
-				test must guarantee that <code>take 42</code> does not occur until
+				test must guarantee that <code>take 42</code> is not executed until
 				<i>after</i> <code>put 17</code>. How could a designer guarantee this interleaving of
 				the two threads? </p>
 				<p>One approach is to use <code>Thread.sleep()</code> in Thread 2 to delay its first
@@ -141,7 +141,7 @@
 				
 				<table>
 					<tr class="row-b">
-						<td colspan="2">Initialize Block</td>
+						<td colspan="2">Initialization</td>
 					</tr>
 					<tr class="row-a">
 						<td colspan="2">
@@ -176,7 +176,7 @@
 				<p>Of course the problem is that the statement <code>c.countDown()</code> cannot be executed
 				until after Thread 1 unblocks... which will not occur until Thread 2 <code>take()</code>s. In
 				other words, this test is deadlocked! </p>
-				<p>MultithreadedTC provides an elegant solution to this problem, illustrated in
+				<p><strong>MultithreadedTC</strong> provides an elegant solution to this problem, illustrated in
 				the following example:</p>
 
 				<table>
@@ -218,14 +218,14 @@
 				<p>Multithreaded has an internal metronome (or clock). But don't try and use it
 				to set the tempo for your jazz band. <b>The clock only advances to the next tick
 				when all threads are blocked</b>. </p>
-				<p>The clock starts at tick 0. In this example, the first statement in Thread 2,
-				<code>waitForTick(1)</code>, makes it block until the clock reaches tick 1 before resuming.
-				Thread 1 is allowed to run freely in tick 0, until it blocks on the second put.
+				<p>The clock starts at tick 0. In this example, the statement <code>waitForTick(1)</code>
+				makes Thread 2 block until the clock reaches tick 1 before resuming.
+				Thread 1 is allowed to run freely in tick 0, until it blocks on the call to <code>put(17)</code>.
 				At this point, all threads are blocked, and the clock can advance to the next
 				tick. </p>
-				<p>In tick 1, the first <code>take()</code> in Thread 2 is executed, and this frees up Thread
+				<p>In tick 1, the statement <code>take(42)</code> in Thread 2 is executed, and this frees up Thread
 				1. The final statement in Thread 1 asserts that the clock is in tick 1, in
-				effect asserting that the thread blocked on the second <code>put()</code>. </p>
+				effect asserting that the thread blocked on the call to <code>put(17)</code>. </p>
 				<p>This approach does not deadlock like the <code>CountDownLatch</code>, and is more reliable
 				than <code>Thread.sleep()</code>. Some other high level observations are:</p>
 				<ul>
@@ -251,7 +251,7 @@
 				<li>The framework handles exceptions thrown by any of the threads, and
 				propagates them up to JUnit. This solves a problem with anonymous Threads, whose
 				exceptions are not detected by JUnit without some extra scaffolding provided by
-				the test designer. (See Examples 2 to 4). </li>
+				the test designer. (See <a href="#examples2to4">Examples 2 to 4</a>). </li>
 					<li>The clock is not necessarily incremented by units of one. When all threads
 				are blocked it advances to the next requested tick specified by a <code>waitForTick()</code>
 				method. If none of the threads are waiting for a tick, the test is declared to
@@ -265,8 +265,8 @@
 				
 				<a name="howitworks2"></a>
 				<h1>2. So how does this work?</h1>
-				<p>The class TestFramework, provides most of the scaffolding required to run
-				MultithreadedTC tests. It uses reflection to identify all relevant methods in
+				<p>The class <code>TestFramework</code>, provides most of the scaffolding required to run
+				<strong>MultithreadedTC</strong> tests. It uses reflection to identify all relevant methods in
 				the test class, invokes them simultaneously in different threads. It regulates
 				these threads using a separate <i>clock thread</i>. </p>
 				<p>The clock thread checks periodically to see if all threads are blocked. If
@@ -286,10 +286,10 @@
 				
 				<a name="usage3"></a>
 				<h1>3. Cool! How do I use this?</h1>
-				<p>MultithreadedTC tests are created by extending one of two classes: </p>
+				<p><strong>MultithreadedTC</strong> tests are created by extending one of two classes: </p>
 				<ol>
 					<li>class <code>MultithreadedTestCase</code> extends <code>junit.framework.Assert</code> and provides
-					the base functionality required all tests. (NOTE: <code>MultithreadedTestCase</code> does
+					the base functionality required by all tests. (NOTE: <code>MultithreadedTestCase</code> does
 					NOT extend <code>junit.framework.TestCase</code>). A test using this class consists of:
 					<ul>
 						<li>an optional <code>initialize()</code> method, </li>
@@ -302,17 +302,21 @@
 					run methods receive an instance of a <code>MultithreadedTestCase</code> and test it in
 					different ways. The primary run methods are:
 					<ul>
-						<li><code>runOnce(MultithreadedTestCase)</code> -- run a test sequence once. </li>
+						<li><code>runOnce(MultithreadedTestCase)</code> -- run a test sequence once, </li>
 						<li><code>runManyTimes(MultithreadedTestCase, int)</code> -- run a test sequence as
-						many times as specified by the int parameter, until one of the test runs
-						fails <br>
+						many times as specified by the <code>int</code> parameter, until one of the test runs
+						fails. <br>
 				&nbsp;</li>
 					</ul></li>
 					<li>class <code>MultithreadedTest</code> extends <code>MultithreadedTestCase</code> and implements
 					<code>junit.framework.Test</code>. So it can be added to a <code>junit.framework.TestSuite</code> and
-					run directly. This class includes a <code>runTest()</code> method that calls:
+					run directly. <br>
+					<br>
+					This class includes a <code>runTest()</code> method that calls:
 					<code>TestFramework.runOnce(this)</code>. To change the way a test is run, override the
-					<code>runTest()</code> method. (MultithreadedTC provides a convencience
+					<code>runTest()</code> method. <br>
+					<br>
+										(<strong>MultithreadedTC</strong> provides a convencience
 					method: <code>TestFramework.buildTestSuite(...)</code>, that looks for
 					inner-classes that implement <code>junit.framework.Test</code> and builds a
 					<code>TestSuite</code> out of these classes.)</li>
@@ -326,14 +330,14 @@
 				<h1>4. Some Examples of Test Cases</h1>
 				
 				<h2>Example 1: Compare And Set</h2>
-				<p>Here is a simple example to demonstrate the basic layout of a MultithreadedTC 
+				<p>Here is a simple example to demonstrate the basic layout of a <strong>MultithreadedTC</strong> 
 				test. In this example, one thread stays in a while loop until its condition is 
 				met due to an action in another thread. Both threads are started simultaneously.</p>
-				<p>Notice that in the MultithreadedTC version, the AtomicInteger parameter is 
-				initialized in the initialize() method, not in a constructor. This is so that if 
-				the test is run many times (with TestFramework.runManyTimes(...)), a fresh 
-				instance of AtomicInteger is used each time.</p>
-				<p>This simple example demonstrates that MultithreadedTC takes care of much of 
+				<p>Notice that in the <strong>MultithreadedTC</strong> version, the <code>AtomicInteger</code> parameter is 
+				initialized in the <code>initialize()</code> method, not in a constructor. This is so that if 
+				the test is run many times (with <code>TestFramework.runManyTimes(...)</code>), a fresh 
+				instance of <code>AtomicInteger</code> is used each time.</p>
+				<p>This simple example demonstrates that <strong>MultithreadedTC</strong> takes care of much of 
 				the scaffolding work needed to set up and start a thread, and eliminates the 
 				need to join the thread before the test ends.</p>
 				
@@ -353,8 +357,7 @@
 				&#xA0;&#xA0;&#xA0; </span><span class="java8">}<br />
 				<br />
 				&#xA0;&#xA0;&#xA0; </span><span class="java4">public </span><span class="java9">void </span><span class="java10">thread1</span><span class="java8">() {<br />
-				&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </span><span class="java4">while</span><span class="java8">(</span><span class="java10">!ai.compareAndSet</span><span class="java8">(</span><span class="java7">2</span><span class="java10">, </span><span class="java7">3</span><span class="java8">)) <br />
-				&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </span><span class="java10">Thread.yield</span><span class="java8">()</span><span class="java10">;<br />
+				&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; </span><span class="java4">while</span><span class="java8">(</span><span class="java10">!ai.compareAndSet</span><span class="java8">(</span><span class="java7">2</span><span class="java10">, </span><span class="java7">3</span><span class="java8">)) </span><span class="java10">Thread.yield</span><span class="java8">()</span><span class="java10">;<br />
 				&#xA0;&#xA0;&#xA0; </span><span class="java8">}<br />
 				<br />
 				&#xA0;&#xA0;&#xA0; </span><span class="java4">public </span><span class="java9">void </span><span class="java10">thread2</span><span class="java8">() {&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0; <br />
@@ -400,20 +403,24 @@
 					<a href="#pagetop" class="readmore">Back to Top</a>
 				</p>
 				
-				
+				<a name="examples2to4"></a>
 				<h2>Example 2: Interrupted Acquire</h2>
-				<p>This example shows some of the strengths of MultithreadedTC. An acquire() on 
-				a Semaphore in one thread is expected to block, and throw an 
-				InterruptedException when interrupted by another thread.</p>
-				<p>The MultithreadedTC version can assert that the InterruptedException is not 
+				<p>This example shows some of the strengths of <strong>MultithreadedTC</strong>. An <code>acquire()</code> on 
+				a <code>Semaphore</code> in one thread is expected to block, and throw an
+				<code>InterruptedException</code> when interrupted by another thread.</p>
+				<p>The <strong>MultithreadedTC</strong> version can assert that the 
+				<code>InterruptedException</code> is not 
 				thrown until tick 1, which is when Thread 1 is interrupted. (So an 
 				implementation of acquire that unconditionally throws the exception may pass the 
-				plain version but will not pass the MultithreadedTC version.)</p>
-				<p>Notice also that an unchecked AssertionError (caused by the fail(...) 
+				plain version but will not pass the <strong>MultithreadedTC</strong> version.)
+				<code>waitForTick()</code> is used instead of <code>Thread.sleep()</code> 
+				to eliminate timing dependencies.</p>
+				<p>Notice also that an unchecked <code>AssertionError</code> (caused by the 
+				<code>fail(...)</code> 
 				statement in Thread 1) will cause the test to kill all threads and fail 
 				immediately. In the plain version, this failure kills the auxillary thread but 
 				not the test. Some extra work is needed to set a flag indicating thread failure, 
-				and assert the flag in JUnit's tearDown() method.</p>
+				and assert the flag in JUnit's <code>tearDown()</code> method.</p>
 
 				<table>
 					<tr class="row-b">
@@ -496,22 +503,23 @@
 					</tr>
 				</table>
 				
-				<p>MultithreadedTC provides some convenience methods for getting access to a 
-				thread. The call to getThread(n) returns a reference to the thread running the 
-				method thread<i>n</i>() where <i>n</i> is an integer. The more general method, 
-				getThreadByName(threadMethod) returns a reference to the thread running the 
-				method threadMethod(). So getThread(1) is equivalent to getThreadByName(&quot;thread1&quot;). </p>
+				<p><strong>MultithreadedTC</strong> provides some convenience methods for getting access to a 
+				thread. The call to <code>getThread(n)</code> returns a reference to the thread running the 
+				method <code>threadn()</code> where <i>n</i> is an integer. The more general method, 
+				<code>getThreadByName(&quot;threadMethod&quot;)</code> returns a reference to the thread running the 
+				method <code>threadMethod().</code> So <code>getThread(1)</code> is equivalent to
+				<code>getThreadByName(&quot;thread1&quot;)</code>. </p>
 				
 				<p class="post-footer align-right">
 					<a href="#pagetop" class="readmore">Back to Top</a>
 				</p>
 				
 				<h2>Example 3: Thread Ordering</h2>
-				<p>Most of the time, waitForTick() is used to wait until another thread blocks, 
+				<p>Most of the time, <code>waitForTick()</code> is used to wait until another thread blocks, 
 				as in Example 2. Occasionally though, it is useful for coordinating two or more 
 				threads that do not contain any blocking. This example shows that even though, 
-				the same can be accomplished using CountDownLatchs, the MultithreadedTC version 
-				using waitForTick() is easier to write and understand.</p>
+				the same can be accomplished using <code>CountDownLatch</code>s, the <strong>MultithreadedTC</strong> version 
+				using <code>waitForTick()</code> is easier to write and understand.</p>
 
 				<table>
 					<tr class="row-b">
@@ -631,8 +639,30 @@
 				
 				<h2>Example 4: Allowing Timeouts</h2>
 				
-				<p>In this test, the first offer is allowed to timeout, the second offer is interrupted. Use `freezeClock`
-				   to prevent the clock from advancing during the first offer.</p>
+				<p>Some concurrent abstractions rely on timing. An example is 
+				the <code>offer()</code> method on the <code>ArrayBlockingQueue</code>, 
+				which tries to add an element to the buffer and blocks for a 
+				specified time limit if the buffer is full. If the <code>offer()</code> 
+				times out, the method returns <code>false</code>. This example 
+				shows how <code>waitForTick()</code> can interact with these 
+				timing elements.</p>
+				<p>If the goal of the test is to cause a timeout in one thread, 
+				we may want to prevent the clock from advancing in another 
+				thread. MultithreadedTC provides the methods <code>freezeClock()</code> 
+				and <code>unfreezeClock()</code>, to respectively disable and 
+				re-enable the clock thread. (The clock thread can still kill a 
+				test that is running for too long when it is disabled.) </p>
+				<p>In this test, the first <code>offer()</code> is allowed to timeout, the second 
+				<code>offer()</code> is interrupted. To guarantee that the 
+				interrupt does not occur on the first <code>offer()</code>, it uses
+				<code>freezeClock()</code>
+				   to freeze the clock during the first offer. Thread 2 is 
+				awakened when Thread 1 blocks on the second <code>offer()</code>. 
+				(Note that the timeout in the <code>offer()</code> statement 
+				should be much longer than the clock period (<a href="docs/edu/umd/cs/mtc/TestFramework.html">see 
+				Javadoc</a>) to ensure that the clock thread has a chance to 
+				wake up.) Obviously tests like this that inherently include 
+				timing do not play well in a debugger.</p>
 							
 				<table>
 					<tr class="row-b">
