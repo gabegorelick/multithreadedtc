@@ -353,13 +353,15 @@ public class TestFramework {
 						if (!test.clockLock.writeLock().tryLock(
 								1000L * runLimit, TimeUnit.MILLISECONDS)) 
 						{
-							test.failed = true;
-							test.lock.notifyAll();
-							if (error[0] == null)
-								error[0] = new IllegalStateException(
-										"No progress");
-							mainThread.interrupt();
-							return;																
+							synchronized (test.lock) {
+								test.failed = true;
+								test.lock.notifyAll();
+								if (error[0] == null)
+									error[0] = new IllegalStateException(
+											"No progress");
+								mainThread.interrupt();
+								return;																
+							}
 						}
 						
 						synchronized (test.lock) {
