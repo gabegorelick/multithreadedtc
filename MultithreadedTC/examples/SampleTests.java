@@ -24,8 +24,8 @@ public class SampleTests extends TestCase {
 
 		public void threadTakeTake() throws InterruptedException {
 			waitForTick(1);
-			assertEquals(Integer.valueOf(42), buf.take());
-			assertEquals(Integer.valueOf(17), buf.take());
+			assertTrue(buf.take() == 42);
+			assertTrue(buf.take() == 17);
 		}
 
 		@Override public void finish() {
