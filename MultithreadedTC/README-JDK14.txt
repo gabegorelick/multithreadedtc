@@ -1,5 +1,2 @@
-The jar file MultithreadedTCforJDK1.4 requires the following libraries 
-available in the Retrotranslator distribution (http://retrotranslator.sourceforge.net/):
-
--- retrotranslator-runtime-XXX.jar
--- backport-util-concurrent-3.0.jar
+The jar file MultithreadedTC-XXX-jdk14.jar is compiled for JDK 1.4 and requires all the libraries 
+distributed with Retrotranslator (http://retrotranslator.sourceforge.net/)

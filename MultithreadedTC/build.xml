@@ -1,25 +1,32 @@
 <project name="MultithreadedTC" default="distjar" basedir=".">
 
 	<property name="release.id" value="1.01" />
+	<property name="jarfile"    value="MultithreadedTC-${release.id}.jar" />
+	<property name="jarfile14"  value="MultithreadedTC-${release.id}-jdk14.jar" />
+	
 	<property name="sourcename" value="MultithreadedTC-${release.id}-source" />
+	
+	<property name="info.files" value="README.txt,LICENSE.txt,CHANGELOG.txt" />
+	<property name="all.info.files" value="${info.files},README-JDK14.txt" />
 
 	<!-- Create distribution jar -->
 	<target name="distjar">
-		<jar destfile="MultithreadedTC-${release.id}.jar" update="true">
+		<jar destfile="${jarfile}" update="true">
 			<fileset dir="bin" includes="edu/**/*class" />
-			<fileset dir="." includes="README.txt,LICENSE.txt,CHANGELOG.txt" />
+			<fileset dir="." includes="${info.files}" />
 		</jar>
 	</target>
 	
 	<!-- Create Source Distribution zip -->
-	<target name="sourcezip" depends="distjar">
-		<zip destfile="MultithreadedTC-${release.id}-source.zip" update="true">
+	<target name="sourcezip" depends="distjar,distjar-jdk14">
+		<zip destfile="${sourcename}.zip" update="true">
 			<zipfileset dir="." includes="src/**" excludes="**.svn**" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="examples/**" excludes="**.svn**" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="web/**" excludes="**.svn**,sanity/**" prefix="${sourcename}"/>
-			<zipfileset dir="." includes="README.txt,LICENSE.txt,CHANGELOG.txt,README-JDK14.txt" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="${all.info.files}" prefix="${sourcename}"/>
 			<zipfileset dir="." includes=".project,.classpath,build.xml" prefix="${sourcename}"/>
-			<zipfileset dir="." includes="MultithreadedTC-1.0.jar" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="${jarfile}" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="${jarfile14}" prefix="${sourcename}"/>
 		</zip>
 	</target>
 	
@@ -31,17 +38,19 @@
 	</target>
 	
 	<!-- Retro Tasks: Create a Jar for 1.4 -->
-    <path id="retroclasspath">
-        <fileset dir="lib" includes="**/*.jar"/>
-    </path>
-	
 	<!-- The 'retrotranslator' task creates a jar file with JDK 1.4 compatible class files.
-	     This task requires 'retrotranslator-transformer-XXX.jar' to be in the lib folder -->
-	<taskdef name="retrotranslator" classpathref="retroclasspath"
-	         classname="net.sf.retrotranslator.transformer.RetrotranslatorTask" />    
-	<retrotranslator destjar="MultithreadedTC-${release.id}-jdk14.jar" verify="false">
-		<fileset dir="bin" includes="edu/**/*.class"/>
-		<fileset dir="." includes="README.txt,LICENSE.txt,CHANGELOG.txt,README-JDK14.txt" />
-    </retrotranslator>
-
+	     This task requires all the jar files in the retrotranslator distribution to be in 
+	     the lib folder. Find these at http://retrotranslator.sourceforge.net/ -->
+	<target name="distjar-jdk14">
+		<path id="retroclasspath">
+	        <fileset dir="lib" includes="**/*.jar"/>
+	    </path>
+		
+		<taskdef name="retrotranslator" classpathref="retroclasspath"
+		         classname="net.sf.retrotranslator.transformer.RetrotranslatorTask" />    
+		<retrotranslator destjar="${jarfile14}" verify="false">
+			<fileset dir="bin" includes="edu/**/*.class"/>
+			<fileset dir="." includes="${all.info.files}" />
+	    </retrotranslator>
+	</target>
 </project>
