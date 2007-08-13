@@ -1,0 +1,7 @@
+CHANGELOG
+
+1.01 August 13, 2007
+- - Update to better support translation into JDK 1.4 compatible bytecode using Retrotranslator
+
+1.0  May 10, 2007 
+- - Initial Release

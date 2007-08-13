@@ -1,13 +1,13 @@
 <project name="MultithreadedTC" default="distjar" basedir=".">
 
-	<property name="release.id" value="1.0" />
+	<property name="release.id" value="1.01" />
 	<property name="sourcename" value="MultithreadedTC-${release.id}-source" />
 
 	<!-- Create distribution jar -->
 	<target name="distjar">
 		<jar destfile="MultithreadedTC-${release.id}.jar" update="true">
 			<fileset dir="bin" includes="edu/**/*class" />
-			<fileset dir="." includes="README.txt,LICENSE.txt" />
+			<fileset dir="." includes="README.txt,LICENSE.txt,CHANGELOG.txt" />
 		</jar>
 	</target>
 	
@@ -17,7 +17,7 @@
 			<zipfileset dir="." includes="src/**" excludes="**.svn**" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="examples/**" excludes="**.svn**" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="web/**" excludes="**.svn**,sanity/**" prefix="${sourcename}"/>
-			<zipfileset dir="." includes="README.txt,LICENSE.txt" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="README.txt,LICENSE.txt,CHANGELOG.txt,README-JDK14.txt" prefix="${sourcename}"/>
 			<zipfileset dir="." includes=".project,.classpath,build.xml" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="MultithreadedTC-1.0.jar" prefix="${sourcename}"/>
 		</zip>
@@ -30,5 +30,18 @@
 		</zip>
 	</target>
 	
+	<!-- Retro Tasks: Create a Jar for 1.4 -->
+    <path id="retroclasspath">
+        <fileset dir="lib" includes="**/*.jar"/>
+    </path>
+	
+	<!-- The 'retrotranslator' task creates a jar file with JDK 1.4 compatible class files.
+	     This task requires 'retrotranslator-transformer-XXX.jar' to be in the lib folder -->
+	<taskdef name="retrotranslator" classpathref="retroclasspath"
+	         classname="net.sf.retrotranslator.transformer.RetrotranslatorTask" />    
+	<retrotranslator destjar="MultithreadedTC-${release.id}-jdk14.jar" verify="false">
+		<fileset dir="bin" includes="edu/**/*.class"/>
+		<fileset dir="." includes="README.txt,LICENSE.txt,CHANGELOG.txt,README-JDK14.txt" />
+    </retrotranslator>
 
 </project>
