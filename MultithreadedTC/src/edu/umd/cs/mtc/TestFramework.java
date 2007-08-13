@@ -72,6 +72,10 @@ import junit.framework.TestSuite;
  */
 public class TestFramework {
 
+	public static int TMP_USEFUL_CLOCK = 0;
+	public static int TMP_USELESS_CLOCK = 0;
+	public static int TMP_TIMEDWAITING_CLOCK = 0;
+	
 	/**
 	 * Command line key for indicating the regularity (in milliseconds)
 	 * with which the clock thread regulates the thread methods.
@@ -360,6 +364,7 @@ public class TestFramework {
 									error[0] = new IllegalStateException(
 											"No progress");
 								mainThread.interrupt();
+								TMP_USEFUL_CLOCK++; // detected frozen clock
 								return;																
 							}
 						}
@@ -421,9 +426,14 @@ public class TestFramework {
 											error[0] = new IllegalStateException(
 											"No progress");
 										mainThread.interrupt();
+										TMP_USEFUL_CLOCK++; // detected timeout
 										return;
 									}
 									deadlocksDetected = 0;
+									if (timedWaiting)
+										TMP_TIMEDWAITING_CLOCK++;
+									else
+										TMP_USELESS_CLOCK++; // thread running or in timed waiting
 									continue;
 								}
 								
@@ -438,6 +448,7 @@ public class TestFramework {
 										if (deadlocksDetected % 10 == 0 && test.getTrace())
 											System.out.println("[Detecting deadlock... " + 
 													deadlocksDetected + " trys]");
+										TMP_USEFUL_CLOCK++; // detecting deadlock
 										continue;
 									}
 									if (test.getTrace()) System.out.println("Deadlock!");
@@ -459,12 +470,14 @@ public class TestFramework {
 										error[0] = new IllegalStateException(
 												"Apparent deadlock\n" + sw.toString());
 									mainThread.interrupt();
+									TMP_USEFUL_CLOCK++; // detected deadlock
 									return;
 								}
 								
 								deadlocksDetected = 0;
 								
 								if (++readyToTick < 2) {
+									TMP_USEFUL_CLOCK++; // getting ready to tick
 									continue;
 								}
 								readyToTick = 0; 
@@ -477,6 +490,7 @@ public class TestFramework {
 								test.lock.notifyAll();
 								if (test.getTrace())
 									System.out.println("Time is now " + test.clock);
+								TMP_USEFUL_CLOCK++; // ticked
 							} finally {
 								test.clockLock.writeLock().unlock();
 							}
