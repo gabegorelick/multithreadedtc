@@ -13,6 +13,7 @@
 	<target name="distjar">
 		<jar destfile="${jarfile}" update="true">
 			<fileset dir="bin" includes="edu/**/*class" />
+			<fileset dir="src" includes="edu/**/*.java" />
 			<fileset dir="." includes="${info.files}" />
 		</jar>
 	</target>

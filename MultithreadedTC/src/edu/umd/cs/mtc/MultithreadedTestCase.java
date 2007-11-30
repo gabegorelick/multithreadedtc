@@ -99,7 +99,7 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * started.
 	 * 
 	 */
-	public void initialize() {
+	public void initialize() throws Exception  {
 	}
 
 	/**
@@ -107,7 +107,7 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * finished.
 	 * 
 	 */
-	public void finish() {
+	public void finish()  throws Exception {
 	}
 
 	/**

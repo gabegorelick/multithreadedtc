@@ -15,6 +15,7 @@ import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -438,6 +439,10 @@ public class TestFramework {
 									}
 									long now = System.currentTimeMillis();
 									if (now - lastProgress > 1000L * runLimit) {
+										if (false) for (int ii = 0; ii < tgCount; ii++) {
+											Thread t = ths[ii];
+											System.out.println("thread " + t.getName() + " is in state " + t.getState());
+											}
 										test.failed = true;
 										test.lock.notifyAll();
 										if (error[0] == null)
@@ -575,7 +580,7 @@ public class TestFramework {
 		ThreadGroup threadGroup = new ThreadGroup("MTC-Threads");
 		final CountDownLatch latch = new CountDownLatch(methods.size());
 		final Semaphore waitForRegistration = new Semaphore(0);
-		
+		final AtomicBoolean signalledError = new AtomicBoolean(false);
 		for (final Method m : methods) {
 			Runnable r = new Runnable() {
 				public void run() {
@@ -597,14 +602,14 @@ public class TestFramework {
 						if (error[0] == null) {
 							error[0] = cause;
 						}
-						signalError(threads);
+						if (signalledError.compareAndSet(false, true)) signalError(threads);
 					} catch (ThreadDeath e) {
 						// ignore it
 					} catch (Throwable e) {
 						System.out.println(Thread.currentThread().getName() + " caught " + e.getMessage());
 						if (error[0] == null)
 							error[0] = e;
-						signalError(threads);
+						if (signalledError.compareAndSet(false, true))  signalError(threads);
 					} finally {
 						test.goodbye();
 					}
@@ -636,11 +641,18 @@ public class TestFramework {
 	private static void signalError(final LinkedList<Thread> threads) {
 		Thread currentThread = Thread.currentThread();
 		for (Thread t : threads)
-			if (t != currentThread) {
+			if (t != currentThread && t.isAlive()) {
+				t.interrupt();
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					assert true; // ignore
+				}
 				AssertionError assertionError = new AssertionError(t.getName()
 						+ " killed by " + currentThread.getName());
-				assertionError.setStackTrace(t.getStackTrace());
-				t.stop(assertionError);
+				StackTraceElement[] stackTrace = t.getStackTrace();
+				if (stackTrace != null) assertionError.setStackTrace(stackTrace);
+				if (t.isAlive()) t.stop(assertionError);
 			}
 	}
 
