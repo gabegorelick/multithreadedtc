@@ -1,0 +1,41 @@
+===== INTRO =====
+
+Here is an attempt to rewrite some of the TCK tests for JSR 166, 
+using the MultithreadedTC framework. 
+
+This folder is an Eclipse Project. The tests should be run with 
+Java 6 and JUnit 4.
+
+The MultithreadedTC tests are for proof-of-concept only (i.e. to show 
+that MultithreadedTC can express all the tests in JSR 166.) They are 
+not meant to replace the TCK tests. (Indeed this would not make sense 
+since MultithreadedTC relies on several classes in java.util.concurrent, 
+including some that are tested by these TCK tests!)
+
+The Concurrency JSR-166 Interest Site is at
+http://g.oswego.edu/dl/concurrency-interest/
+
+The latest TCK tests are at 
+http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/test/tck/
+
+(This version was downloaded in early 2007)
+
+This project ONLY includes the TCK tests that require more than 1 thread.
+There are 258 such tests.
+
+
+===== RUNNING TESTS =====
+
+The package 'tckversion' is the original version of all 258 tests. The best
+way to run it is by running 'tckversion.JSR166TestCase' as a JUnit suite 
+(it collects all the other tests in the package).
+
+The package 'mtcversion' is the rewritten MultithreadedTC version. Again
+the best way to run it is by running 'mtcversion.JSR166TestCase'.
+
+Some of the tests have my comments as I was writing and doing research.
+One interesting test is 'mtcversion.LockSupportTest.TUnitTestPark2' (see 
+the comments above this test).
+
+I have not rigorously run all these tests on different platforms, and sometimes
+even the original tests fail.
