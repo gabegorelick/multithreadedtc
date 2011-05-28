@@ -4,7 +4,7 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import junit.framework.TestCase;
 
-public class TimingTests extends TestCase {
+public class TimingTest extends TestCase {
 	
     class TUnitTestClockDoesNotAdvanceWhenFrozen extends MultithreadedTestCase {
     	String s;

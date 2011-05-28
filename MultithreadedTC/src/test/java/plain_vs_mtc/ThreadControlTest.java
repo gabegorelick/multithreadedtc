@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 /**
  * Controlling the order in which threads are called
  */
-public class ThreadControlTests extends TestCase {
+public class ThreadControlTest extends TestCase {
 
 	// MTC Version
 

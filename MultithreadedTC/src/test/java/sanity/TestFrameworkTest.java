@@ -4,7 +4,7 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import junit.framework.TestCase;
 
-public class TestFrameworkTests extends TestCase {
+public class TestFrameworkTest extends TestCase {
 	
 	class TUnitTestRunThreeTimes extends MultithreadedTestCase {
 		int i=0;

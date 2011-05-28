@@ -7,7 +7,7 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import junit.framework.TestCase;
 
-public class ErrorDetectionTests extends TestCase {
+public class ErrorDetectionTest extends TestCase {
 	
 	boolean trace = false;
 	

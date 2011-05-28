@@ -7,7 +7,7 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import junit.framework.TestCase;
 
-public class BasicTests extends TestCase {	
+public class BasicTest extends TestCase {	
 	
 	// Test
 	class SanityMetronomeOrder extends MultithreadedTestCase {

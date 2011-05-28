@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 /**
  * Test that a waiting acquire blocks interruptibly
  */
-public class InterruptBlockedTests extends TestCase {
+public class InterruptBlockedTest extends TestCase {
 
 	/* NOTES
 	 * - Failures in threads require additional work in setup and teardown

@@ -10,7 +10,7 @@ import junit.framework.TestCase;
  * compareAndSet in one thread enables another waiting for value
  * to succeed 
  */
-public class CompareAndSetTests extends TestCase {
+public class CompareAndSetTest extends TestCase {
 
 	/* NOTES
 	 * - Plain version requires a join before final asserts

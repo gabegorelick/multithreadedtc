@@ -1,25 +1,16 @@
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
-import edu.umd.cs.mtc.MultithreadedTest;
+import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
-import junit.framework.Test;
 import junit.framework.TestCase;
 
 
-/**
- * The same tests as SampleTests, but using MultithreadedTest
- * instead of MultithreadedTestCase. This means we can eliminate
- * the junit methods for each test, and just provide a single
- * `suite()` method that calls {@link TestFramework#buildTestSuite(Class)}
- */
-public class SampleTests2 extends TestCase {
+public class SampleTest extends TestCase {
 
-	public static Test suite() {
-		return TestFramework.buildTestSuite(SampleTests2.class);
-	}
+    // -- EXAMPLE 1 --
 	
-	class MTCBoundedBufferTest extends MultithreadedTest {
+	class MTCBoundedBufferTest extends MultithreadedTestCase {
 		ArrayBlockingQueue<Integer> buf;
 		@Override public void initialize() {
 			buf = new ArrayBlockingQueue<Integer>(1); 
@@ -33,8 +24,8 @@ public class SampleTests2 extends TestCase {
 
 		public void threadTakeTake() throws InterruptedException {
 			waitForTick(1);
-			assertEquals(Integer.valueOf(42), buf.take());
-			assertEquals(Integer.valueOf(17), buf.take());
+			assertTrue(buf.take() == 42);
+			assertTrue(buf.take() == 17);
 		}
 
 		@Override public void finish() {
@@ -42,13 +33,19 @@ public class SampleTests2 extends TestCase {
 		}		
 	}
 	
+    public void testMTCBoundedBuffer() throws Throwable {
+    	TestFramework.runOnce( new MTCBoundedBufferTest() );
+    }
+    
+    // -- EXAMPLE 2 --
+    
 	/**
 	 * Can we implement the Bounded Buffer using CountDownLatch? Nope,
 	 * this causes a deadlock! But MTC can detect deadlocks. So we'll 
 	 * use the CountDownLatch version to demonstrate MTC's deadlock
 	 * detection capabilities.
 	 */
-	class MTCBoundedBufferDeadlockTest extends MultithreadedTest {
+	class MTCBoundedBufferDeadlockTest extends MultithreadedTestCase {
 		ArrayBlockingQueue<Integer> buf;
 		CountDownLatch c;
 		
@@ -68,13 +65,13 @@ public class SampleTests2 extends TestCase {
 			assertEquals(Integer.valueOf(42), buf.take());
 			assertEquals(Integer.valueOf(17), buf.take());
 		}
-
-		@Override public void runTest() throws Throwable {
-			try {
-				TestFramework.runOnce(this);
-				fail("Test should throw an IllegalStateException");
-			} catch (IllegalStateException deadlockDetected) {}
-		}
 	}
 
+    public void testMTCBoundedBufferDeadlock() throws Throwable {
+		try {
+			TestFramework.runOnce( new MTCBoundedBufferDeadlockTest() );
+			fail("Test should throw an IllegalStateException");
+		} catch (IllegalStateException deadlockDetected) {}
+    }
+    
 }

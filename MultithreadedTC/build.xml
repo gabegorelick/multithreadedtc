@@ -12,8 +12,8 @@
 	<!-- Create distribution jar -->
 	<target name="distjar">
 		<jar destfile="${jarfile}" update="true">
-			<fileset dir="bin" includes="edu/**/*class" />
-			<fileset dir="src" includes="edu/**/*.java" />
+			<fileset dir="target/classes" includes="edu/**/*class" />
+			<fileset dir="src/main/java" includes="edu/**/*.java" />
 			<fileset dir="." includes="${info.files}" />
 		</jar>
 	</target>
@@ -21,7 +21,7 @@
 	<!-- Create Source Distribution zip -->
 	<target name="sourcezip" depends="distjar,distjar-jdk14">
 		<zip destfile="${sourcename}.zip" update="true">
-			<zipfileset dir="." includes="src/**" excludes="**.svn**" prefix="${sourcename}"/>
+			<zipfileset dir="." includes="src/main/java/**" excludes="**.svn**" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="examples/**" excludes="**.svn**" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="web/**" excludes="**.svn**,sanity/**" prefix="${sourcename}"/>
 			<zipfileset dir="." includes="${all.info.files}" prefix="${sourcename}"/>
@@ -50,7 +50,7 @@
 		<taskdef name="retrotranslator" classpathref="retroclasspath"
 		         classname="net.sf.retrotranslator.transformer.RetrotranslatorTask" />    
 		<retrotranslator destjar="${jarfile14}" verify="false">
-			<fileset dir="bin" includes="edu/**/*.class"/>
+			<fileset dir="target/classes" includes="edu/**/*.class"/>
 			<fileset dir="." includes="${all.info.files}" />
 	    </retrotranslator>
 	</target>

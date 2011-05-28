@@ -12,10 +12,10 @@ import junit.framework.TestSuite;
  * Some simple tests with different kinds of inner classes all to be detected.
  * 
  */
-public class BuildTestSuiteTests extends TestCase {
+public class BuildTestSuiteTest extends TestCase {
 
 	public static Test suite() {
-		TestSuite s = TestFramework.buildTestSuite(BuildTestSuiteTests.class);
+		TestSuite s = TestFramework.buildTestSuite(BuildTestSuiteTest.class);
 		assertEquals(13, s.countTestCases());
 		return s;
 	}

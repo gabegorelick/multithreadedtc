@@ -11,7 +11,7 @@ import junit.framework.TestCase;
  * Timed offer times out if ArrayBlockingQueue is full and 
  * elements are not taken
  */
-public class TimeoutTests extends TestCase {
+public class TimeoutTest extends TestCase {
 	
 	/* NOTES
 	 * - Uses freezeClock to prevent clock from advancing
