@@ -37,7 +37,7 @@ import junit.framework.Assert;
  * There are several additional methods you can use in designing test cases. The
  * MultithreadedTestCase maintains a metronome or clock, and ticks off
  * intervals. You can get the current tick with {@link #getTick()} and you can
- * wait until a particular tick with {@link #waitForTick(int)}. The metronome
+ * wait until a particular tick with {@link #waitForTick(long)}. The metronome
  * isn't a free running clock; it only advances to the next tick when all
  * threads are blocked or waiting. Also, when all threads are blocked, if at least one 
  * thread isn't waiting for the metronome to advance, the system declares a 
@@ -68,11 +68,11 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * is advanced by the clock thread started by {@link TestFramework}.
 	 * The clock will not advance if it is frozen.
 	 * 
-	 * @see #waitForTick(int) 
+	 * @see #waitForTick(long) 
 	 * @see #freezeClock()
 	 * @see #unfreezeClock()
 	 */
-	int clock;
+	private long clock;
 
 	/**
 	 * The primary lock to synchronize on in this test case before 
@@ -133,7 +133,7 @@ abstract public class MultithreadedTestCase extends Assert {
 	/**
 	 * Map each thread to the clock tick it is waiting for.
 	 */
-	IdentityHashMap<Thread, Integer> threads = new IdentityHashMap<Thread, Integer>();
+	IdentityHashMap<Thread, Long> threads = new IdentityHashMap<Thread, Long>();
 
 	/**
 	 * ThreadLocal containing a reference to the current instance of 
@@ -152,7 +152,7 @@ abstract public class MultithreadedTestCase extends Assert {
 		currentTestCase.set(this);
 		synchronized (lock) {
 			Thread currentThread = Thread.currentThread();
-			threads.put(currentThread, 0);
+			threads.put(currentThread, 0L);
 		}
 
 	}
@@ -245,7 +245,7 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * @param c
 	 *            the tick value to wait for
 	 */
-	public void waitForTick(int c) {
+	public void waitForTick(long c) {
 		synchronized (lock) {
 			threads.put(Thread.currentThread(), c);
 			while (!failed && clock < c)
@@ -270,7 +270,7 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * An Enum-based version of waitForTick. It simply looks up the ordinal and 
 	 * adds 1 to determine the clock tick to wait for. 
 	 * 
-	 * @see #waitForTick(int)
+	 * @see #waitForTick(long)
 	 * 
 	 * @param e
 	 * 			An Enum representing the tick to wait for. The first enumeration
@@ -284,14 +284,25 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * Gets the current value of the thread metronome. Primarily useful in
 	 * assert statements.
 	 * 
-	 * @see #assertTick(int)
+	 * @see #assertTick(long)
 	 * 
 	 * @return the current tick value
 	 */
-	public int getTick() {
+	public long getTick() {
 		synchronized (lock) {
 			return clock;
 		}
+	}
+
+	/**
+	 * Advances the clock. To be invoked only by the {@link TestFramework}.
+	 * 
+	 * @see #getTick()
+	 * 
+	 * @param tick The new clock tick value.
+	 */
+	void setTick(long tick) {
+		clock = tick;
 	}
 
 	/**
@@ -300,7 +311,7 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * @param tick
 	 * 			a number >= 0
 	 */
-	public void assertTick(int tick) {
+	public void assertTick(long tick) {
 		assertEquals(tick, getTick());
 	}
 	
@@ -318,7 +329,7 @@ abstract public class MultithreadedTestCase extends Assert {
 	/**
 	 * When the clock is frozen, it will not advance even when all threads
 	 * are blocked. Use this to block the current thread with a time limit,
-	 * but prevent the clock from advancing due to a {@link #waitForTick(int)} in 
+	 * but prevent the clock from advancing due to a {@link #waitForTick(long)} in 
 	 * another thread. This statements that occur when clock is frozen should be 
 	 * followed by {@link #unfreezeClock()} in the same thread.
 	 */

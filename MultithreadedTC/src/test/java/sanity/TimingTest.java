@@ -38,7 +38,7 @@ public class TimingTest extends TestCase {
     }
 
     /**
-     * Tests that {@link #assertTick(int)} works correctly.
+     * Tests that {@link #assertTick(long)} works correctly.
      */
     class TestAssertTick extends MultithreadedTestCase {
     	public void thread1() {

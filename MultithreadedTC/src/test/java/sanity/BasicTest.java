@@ -17,7 +17,7 @@ import edu.umd.cs.mtc.TestFramework;
 public class BasicTest extends TestCase {	
 	
 	/**
-	 * Tests the sanity of the methods ordering with {@link #waitForTick(int)}.
+	 * Tests the sanity of the methods ordering with {@link #waitForTick(long)}.
 	 */
 	class TestMetronomeOrder extends MultithreadedTestCase {
 		StringBuffer output = new StringBuffer();
@@ -130,7 +130,7 @@ public class BasicTest extends TestCase {
     
     /**
      * Tests that when the other threads are blocked, a call to
-     * {@link #waitForTick(int)} returns immediately.
+     * {@link #waitForTick(long)} returns immediately.
      */
     class TestWaitForTickAdvancesWhenTestsAreBlocked extends MultithreadedTestCase {
     	CyclicBarrier barrier = new CyclicBarrier(3);
@@ -159,7 +159,7 @@ public class BasicTest extends TestCase {
     }
     
     /**
-     * Tests that when a thread is waiting on a {@link #waitForTick(int)},
+     * Tests that when a thread is waiting on a {@link #waitForTick(long)},
      * its state is {@value Thread.State#WAITING}. 
      */
 	class TestWaitForTickBlocksThread extends MultithreadedTestCase {

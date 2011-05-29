@@ -42,7 +42,7 @@ public class ErrorDetectionTest extends TestCase {
     
     /**
      * Test that if the clock is frozen and never unfrozen, a thread waiting
-     * for {@link #waitForTick(int)} will never return, and the test will fail.
+     * for {@link #waitForTick(long)} will never return, and the test will fail.
      */
     class TestMissingUnfreeze extends MultithreadedTestCase {    	
     	public void thread1() throws InterruptedException {

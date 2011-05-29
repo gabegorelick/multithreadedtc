@@ -270,7 +270,7 @@ public class TestFramework {
 		
 		// invoke initialize method before each run
 		test.initialize();
-		test.clock = 0;
+		test.setTick(0L);
 		
 		// invoke each thread method in a seperate thread and place all threads in a
 		// new thread group
@@ -392,7 +392,7 @@ public class TestFramework {
 								// will set true if any thread is in state TIMED_WAITING							
 								boolean timedWaiting = false; 
 
-								int nextTick = Integer.MAX_VALUE;
+								long nextTick = Long.MAX_VALUE;
 
 								// examine the threads in the thread group; look for
 								// next tick
@@ -420,14 +420,14 @@ public class TestFramework {
 										timedWaiting = true;
 									}
 									
-									Integer waitingFor = test.threads.get(t);
-									if (waitingFor != null && waitingFor > test.clock)
+									Long waitingFor = test.threads.get(t);
+									if (waitingFor != null && waitingFor > test.getTick())
 										nextTick = Math.min(nextTick, waitingFor);								
 								}
 
 								// If not waiting for anything, but a thread is in
 								// TIMED_WAITING, then check progress and loop again
-								if (nextTick == Integer.MAX_VALUE && timedWaiting)
+								if (nextTick == Long.MAX_VALUE && timedWaiting)
 									checkProgress = true;
 
 								// Check for timeout conditions and restart the loop
@@ -456,7 +456,7 @@ public class TestFramework {
 								}
 								
 								// Detect deadlock
-								if (nextTick == Integer.MAX_VALUE) {
+								if (nextTick == Long.MAX_VALUE) {
 									if (readyToTick > 0) {
 										if (test.getTrace()) 
 											System.out.println("Was Ready to tick too early");
@@ -472,7 +472,7 @@ public class TestFramework {
 									
 									StringWriter sw = new StringWriter();
 									PrintWriter out = new PrintWriter(sw);
-									for (Map.Entry<Thread, Integer> e : test.threads
+									for (Map.Entry<Thread, Long> e : test.threads
 											.entrySet()) {
 										Thread t = e.getKey();
 										out.println(t.getName() + " "
@@ -498,13 +498,13 @@ public class TestFramework {
 								readyToTick = 0; 
 								
 								// Advance to next tick
-								test.clock = nextTick;
+								test.setTick(nextTick);
 								lastProgress = System.currentTimeMillis();
 								
 								// notify any threads that are waiting for this tick
 								test.lock.notifyAll();
 								if (test.getTrace())
-									System.out.println("Time is now " + test.clock);
+									System.out.println("Time is now " + test.getTick());
 							} finally {
 								test.clockLock.writeLock().unlock();
 							}
