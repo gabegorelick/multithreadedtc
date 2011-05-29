@@ -7,18 +7,17 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import junit.framework.TestCase;
 
+/**
+ * Tests for all the error conditions detected by the {@link TestFramework}.
+ */
 public class ErrorDetectionTest extends TestCase {
 	
-	boolean trace = false;
-	
-    class TUnitTestDeadlockDetected extends MultithreadedTestCase {
-    	ReentrantLock lockA;	
-    	ReentrantLock lockB;
-    	
-    	@Override public void initialize() {
-    		lockA = new ReentrantLock();	
-    		lockB = new ReentrantLock();
-    	}
+	/**
+	 * Tests that a deadlock fails the test.
+	 */
+    class TestDeadlockDetected extends MultithreadedTestCase {
+    	ReentrantLock lockA = new ReentrantLock();
+    	ReentrantLock lockB = new ReentrantLock();
     	
     	public void threadA() {
     		lockA.lock();
@@ -35,17 +34,17 @@ public class ErrorDetectionTest extends TestCase {
     
     public void testDeadlockDetected() throws Throwable {
     	try {
-    		TestFramework.runOnce( new TUnitTestDeadlockDetected() );
+    		TestFramework.runOnce( new TestDeadlockDetected() );
     		fail("should throw exception");
-    	} catch (IllegalStateException success) {
-    		if (trace) success.printStackTrace();
+    	} catch (IllegalStateException expected) {
     	}
     }
     
-    // - - - -
-
-    
-    class TUnitTestMissingUnfreeze extends MultithreadedTestCase {    	
+    /**
+     * Test that if the clock is frozen and never unfrozen, a thread waiting
+     * for {@link #waitForTick(int)} will never return, and the test will fail.
+     */
+    class TestMissingUnfreeze extends MultithreadedTestCase {    	
     	public void thread1() throws InterruptedException {
     		freezeClock();
     		Thread.sleep(200);
@@ -56,27 +55,19 @@ public class ErrorDetectionTest extends TestCase {
     	}
     }
     
-    public void testMissingUnfreeze_tunit() throws Throwable {
+    public void testMissingUnfreeze() throws Throwable {
     	try {
     		// Set test to timeout after 2 seconds
-    		TestFramework.runOnce( new TUnitTestMissingUnfreeze(), null, 2 );
+    		TestFramework.runOnce(new TestMissingUnfreeze(), null, 2);
     		fail("should throw exception");
-    	} catch (IllegalStateException success) {
-    		if (trace) success.printStackTrace();
+    	} catch (IllegalStateException expected) {
     	}
     }
     
-    // - - - -
-
     
-    class TUnitTestLiveLockTimesOut extends MultithreadedTestCase {
-		AtomicInteger ai;
+    class TestLiveLockTimesOut extends MultithreadedTestCase {
+		AtomicInteger ai = new AtomicInteger(1);
 		
-		@Override public void initialize() {
-    		ai = new AtomicInteger(1);
-    		if (false) ai.compareAndSet(1, 2);
-    	}
-    	
     	public void thread1() {
     		while(!ai.compareAndSet(2, 3)) Thread.yield();
     	}
@@ -84,19 +75,14 @@ public class ErrorDetectionTest extends TestCase {
     	public void thread2() {    	
     		while(!ai.compareAndSet(3, 2)) Thread.yield();
     	}
-
-		@Override public void finish() {
-            assertTrue(ai.get() == 2 || ai.get() == 3);			
-		}    	    	
     }
     
     public void testLiveLockTimesOut() throws Throwable {
     	try {
     		// Set test to timeout after 2 seconds
-    		TestFramework.runOnce( new TUnitTestLiveLockTimesOut(), null, 2 );
+    		TestFramework.runOnce(new TestLiveLockTimesOut(), null, 2);
     		fail("should throw exception");
-    	} catch (IllegalStateException success) {
-    		if (trace) success.printStackTrace();
+    	} catch (IllegalStateException expected) {
     	}
     }
 

@@ -10,7 +10,6 @@ import junit.framework.TestSuite;
 
 /**
  * Some simple tests with different kinds of inner classes all to be detected.
- * 
  */
 public class BuildTestSuiteTest extends TestCase {
 
@@ -197,6 +196,7 @@ public class BuildTestSuiteTest extends TestCase {
     }
 
 	// Test
+	@SuppressWarnings("unused")
 	private class PrivateClassPrivateConstructor extends MultithreadedTest {
     	private PrivateClassPrivateConstructor() {}
 		

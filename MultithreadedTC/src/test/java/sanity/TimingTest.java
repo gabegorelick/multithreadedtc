@@ -2,15 +2,21 @@ package sanity;
 
 import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
+import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
+/**
+ * Test timing-related issues, {@link MultithreadedTestCase#freezeClock()},
+ * etc.
+ */
 public class TimingTest extends TestCase {
 	
-    class TUnitTestClockDoesNotAdvanceWhenFrozen extends MultithreadedTestCase {
-    	String s;
-    	@Override public void initialize() {
-    		s = "A";
-    	}
+	/**
+	 * Tests that if a thread freezes the clock, it does not advance until it
+	 * is unfrozen.
+	 */
+    class TestClockDoesNotAdvanceWhenFrozen extends MultithreadedTestCase {
+    	volatile String s = "A";
     	
     	public void thread1() throws InterruptedException {
     		freezeClock();
@@ -23,14 +29,48 @@ public class TimingTest extends TestCase {
     		waitForTick(1);
     		s = "B";
     	}
-
-    	@Override public void finish() {
-    		assertEquals(s, "B");
-    	}
     }
     
     public void testClockDoesNotAdvanceWhenFrozen() throws Throwable {
-    	TestFramework.runOnce( new TUnitTestClockDoesNotAdvanceWhenFrozen() );
+    	TestClockDoesNotAdvanceWhenFrozen test = new TestClockDoesNotAdvanceWhenFrozen();
+		TestFramework.runOnce(test);
+		assertEquals(test.s, "B");
     }
 
+    /**
+     * Tests that {@link #assertTick(int)} works correctly.
+     */
+    class TestAssertTick extends MultithreadedTestCase {
+    	public void thread1() {
+    		waitForTick(1);
+    		assertTick(1);
+
+    		waitForTick(2);
+    		try {
+    			assertTick(1);
+    		} catch (AssertionFailedError expected) {
+    		}
+    	}
+    }
+
+    public void testAssertTick() throws Throwable {
+    	TestFramework.runOnce(new TestAssertTick());
+    }
+
+    /**
+     * Tests that {@link #getTick()} works correctly.
+     */
+    class TestGetTick extends MultithreadedTestCase {
+    	public void thread1() {
+    		waitForTick(1);
+    		assertEquals(1, getTick());
+
+    		waitForTick(2);
+    		assertEquals(2, getTick());
+    	}
+    }
+
+    public void testGetTick() throws Throwable {
+    	TestFramework.runOnce(new TestGetTick());
+    }
 }
