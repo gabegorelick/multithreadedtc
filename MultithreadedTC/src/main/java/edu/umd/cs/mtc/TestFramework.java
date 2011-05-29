@@ -147,7 +147,7 @@ public class TestFramework {
 	 * 			  if there is at least one failure -- the first failure is thrown
 	 */
 	public static void runInstrumentedManyTimes(final MultithreadedTestCase test, int count, 
-			int [] failureCount) throws Throwable {
+			int[] failureCount) throws Throwable {
 		int failures = 0;
 		Throwable t = null;
 		boolean failed = false;
@@ -171,7 +171,7 @@ public class TestFramework {
 		}
 		if (failureCount != null && failureCount.length > 0) 
 			failureCount[0] = failures;
-		if (t!=null)
+		if (t != null)
 			throw t;
 	}
 
@@ -272,7 +272,7 @@ public class TestFramework {
 		test.initialize();
 		test.setTick(0L);
 		
-		// invoke each thread method in a seperate thread and place all threads in a
+		// invoke each thread method in a separate thread and place all threads in a
 		// new thread group
 		ThreadGroup threadGroup = startMethodThreads(test, methods, threads, error);
 		
@@ -362,7 +362,7 @@ public class TestFramework {
 						// Attempt to get a write lock; this succeeds
 						// if clock is not frozen
 						if (!test.clockLock.writeLock().tryLock(
-								1000L * runLimit, TimeUnit.MILLISECONDS)) 
+							runLimit, TimeUnit.SECONDS)) 
 						{
 							synchronized (test.lock) {
 								test.failed = true;
@@ -381,7 +381,7 @@ public class TestFramework {
 
 								// Get the contents of the thread group
 								int tgCount = threadGroup.activeCount() + 10;
-								Thread [] ths = new Thread [tgCount];
+								Thread[] ths = new Thread [tgCount];
 								tgCount = threadGroup.enumerate(ths, false);
 								if (tgCount == 0) return; // all threads are done
 
@@ -438,11 +438,7 @@ public class TestFramework {
 										readyToTick = 0;
 									}
 									long now = System.currentTimeMillis();
-									if (now - lastProgress > 1000L * runLimit) {
-										if (false) for (int ii = 0; ii < tgCount; ii++) {
-											Thread t = ths[ii];
-											System.out.println("thread " + t.getName() + " is in state " + t.getState());
-											}
+									if (now - lastProgress > TimeUnit.SECONDS.toMillis(runLimit)) {
 										test.failed = true;
 										test.lock.notifyAll();
 										if (error[0] == null)
@@ -556,7 +552,7 @@ public class TestFramework {
 	}
 
 	/**
-	 * Invoke each of the thread methods in a seperate thread and 
+	 * Invoke each of the thread methods in a separate thread and 
 	 * place them all in a common (new) thread group. As a side-effect
 	 * all the threads are placed in the 'threads' LinkedList parameter,
 	 * and any errors detected are placed in the 'error' array parameter.
@@ -714,13 +710,13 @@ public class TestFramework {
 	public static TestSuite buildTestSuite(Class<?> c, String suiteName) {
 		TestSuite suite = new TestSuite(suiteName);
 		
-		final Class<?> [] CNULL = null;
-		final Object [] ONULL = null;
+		final Class<?>[] CNULL = null;
+		final Object[] ONULL = null;
 				
 		// A no-arg constructor for c will be created if necessary
 		Constructor<?> mainCons = null;
 		
-		Class<?> [] innerClasses = c.getDeclaredClasses();
+		Class<?>[] innerClasses = c.getDeclaredClasses();
 		
 		for (Class<?> innerClass : innerClasses) {
 			// only consider subclasses of junit.framework.Test
@@ -784,10 +780,10 @@ public class TestFramework {
 	{		
 		Method setUp = null, tearDown = null;
 		
-		setUp = TestCase.class.getDeclaredMethod("setUp", (Class<?> []) null);
+		setUp = TestCase.class.getDeclaredMethod("setUp", (Class<?>[]) null);
 		if (!setUp.isAccessible()) makeAccessible(setUp);
 		
-		tearDown = TestCase.class.getDeclaredMethod("tearDown", (Class<?> []) null);
+		tearDown = TestCase.class.getDeclaredMethod("tearDown", (Class<?>[]) null);
 		if (!tearDown.isAccessible()) makeAccessible(tearDown);
 		
 		mtc.addSetUpAndTearDown(tc, setUp, tearDown);
