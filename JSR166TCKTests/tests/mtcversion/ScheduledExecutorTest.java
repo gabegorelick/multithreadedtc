@@ -42,7 +42,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     	ScheduledThreadPoolExecutor p1;
     	
     	public void initialize() {
-        	runnable =new TrackedTick1Runnable();
+        	runnable = new TrackedTick1Runnable();
         	p1 = new ScheduledThreadPoolExecutor(1);
     	}
     	
@@ -53,6 +53,7 @@ public class ScheduledExecutorTest extends JSR166TestCase {
     		waitForTick(2);
     		try { p1.shutdown(); } catch(SecurityException ok) { return; }
 
+    		waitForTick(3);
     		assertTrue(runnable.done);
     		try { p1.shutdown(); } catch(SecurityException ok) { return; }
     		joinPool(p1);
