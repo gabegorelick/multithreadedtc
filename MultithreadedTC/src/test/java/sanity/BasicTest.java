@@ -1,5 +1,6 @@
 package sanity;
 
+import java.lang.Thread.State;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -171,7 +172,8 @@ public class BasicTest extends TestCase {
     	
     	public void thread2() {   
     		waitForTick(1);
-    		assertEquals(Thread.State.WAITING, t.getState());
+    		State state = t.getState();
+    		assertTrue(state == Thread.State.WAITING || state == Thread.State.BLOCKED);
     	}
     }
         
