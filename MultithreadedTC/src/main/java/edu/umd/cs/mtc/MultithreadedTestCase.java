@@ -3,6 +3,9 @@ package edu.umd.cs.mtc;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Random;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -302,7 +305,11 @@ abstract public class MultithreadedTestCase extends Assert {
 	 * @param tick The new clock tick value.
 	 */
 	void setTick(long tick) {
+		long oldTick = clock;
 		clock = tick;
+		if (tick > oldTick) {
+			notifyListeners(tick);
+		}
 	}
 
 	/**
@@ -485,5 +492,49 @@ abstract public class MultithreadedTestCase extends Assert {
 	 */
 	public void mayYield(double probability) {			
 		if (mtcRandomizer.get().nextDouble() < probability) Thread.yield();
+	}
+
+	// ===============================
+	// -- Tick Listeners --
+	// - - - - - - - - - - - - - - - -
+	
+	/**
+	 * Maintain a queue of clock ticks that should not be skipped.
+	 */
+	SortedSet<Long> ticks = new TreeSet<Long>();
+
+	/**
+	 * The internal listeners list.
+	 */
+	private CopyOnWriteArrayList<TickListener> listeners = new CopyOnWriteArrayList<TickListener>();
+
+	/**
+	 * Registers the given {@link TickListener} to be notified of tick events.
+	 * 
+	 * @param listener
+	 *          The listener instance that is registered.
+	 */
+    public void addTickListener(TickListener listener) {
+    	listeners.add(listener);
+    }
+
+    private void notifyListeners(long advancedTicks) {
+		for (TickListener listener : listeners) {
+			listener.notifyTick(advancedTicks);
+		}
+	}
+
+	/**
+	 * Register a tick that should not be skipped when advancing the clock.
+	 * However, unlike {@link #waitForTick(long)}, does not block the calling
+	 * thread. This method is useful in combination with a {@link TickListener}.
+	 * 
+	 * @param c
+	 *          The clock tick that should be registered.
+	 */
+	public void registerTick(long c) {
+		synchronized (lock) {
+			ticks.add(c);
+		}
 	}
 }

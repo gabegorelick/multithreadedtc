@@ -425,6 +425,18 @@ public class TestFramework {
 										nextTick = Math.min(nextTick, waitingFor);								
 								}
 
+								// Examine registered ticks that should not be skipped.
+								while (!test.ticks.isEmpty() && test.ticks.first() <= test.getTick()) {
+									test.ticks.remove(test.ticks.first());
+								}
+								if (!test.ticks.isEmpty()) {
+									Long first = test.ticks.first();
+									if (first < nextTick) {
+										nextTick = first;
+										checkProgress = false;
+									}
+								}
+
 								// If not waiting for anything, but a thread is in
 								// TIMED_WAITING, then check progress and loop again
 								if (nextTick == Long.MAX_VALUE && timedWaiting)
