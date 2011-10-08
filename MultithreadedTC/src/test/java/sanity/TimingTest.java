@@ -1,23 +1,29 @@
 package sanity;
 
-import edu.umd.cs.mtc.MultithreadedTestCase;
-import edu.umd.cs.mtc.TestFramework;
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+
+import edu.umd.cs.mtc.MultithreadedJUnit4TestCase;
+import edu.umd.cs.mtc.Threaded;
 
 /**
  * Test timing-related issues, {@link MultithreadedTestCase#freezeClock()},
  * etc.
  */
-public class TimingTest extends TestCase {
+@RunWith(Enclosed.class)
+public class TimingTest {
 	
 	/**
 	 * Tests that if a thread freezes the clock, it does not advance until it
 	 * is unfrozen.
 	 */
-    class TestClockDoesNotAdvanceWhenFrozen extends MultithreadedTestCase {
+    public static class TestClockDoesNotAdvanceWhenFrozen extends MultithreadedJUnit4TestCase {
     	volatile String s = "A";
     	
+    	@Threaded
     	public void thread1() throws InterruptedException {
     		freezeClock();
     		Thread.sleep(200);
@@ -25,42 +31,51 @@ public class TimingTest extends TestCase {
     		unfreezeClock();
     	}
     	
+    	@Threaded
     	public void thread2() {    		
     		waitForTick(1);
     		s = "B";
     	}
+    	
+    	@Test
+    	public void testClockDoesNotAdvanceWhenFrozen() {
+    		assertEquals(s, "B");
+        }
     }
     
-    public void testClockDoesNotAdvanceWhenFrozen() throws Throwable {
-    	TestClockDoesNotAdvanceWhenFrozen test = new TestClockDoesNotAdvanceWhenFrozen();
-		TestFramework.runOnce(test);
-		assertEquals(test.s, "B");
-    }
+    
 
     /**
      * Tests that {@link #assertTick(long)} works correctly.
      */
-    class TestAssertTick extends MultithreadedTestCase {
+    public static class TestAssertTick extends MultithreadedJUnit4TestCase {
+    	@Threaded
     	public void thread1() {
     		waitForTick(1);
     		assertTick(1);
 
     		waitForTick(2);
-    		try {
-    			assertTick(1);
-    		} catch (AssertionFailedError expected) {
-    		}
+    		assertTick(1);
+    		
     	}
+    	
+    	/**
+    	 * This is a weird test. We expect it to fail, and when it does, it
+    	 * passes.
+    	 */
+    	@Test(expected = AssertionError.class)
+    	public void testAssertTick() {
+    		// this space left intentionally blank
+        }
     }
 
-    public void testAssertTick() throws Throwable {
-    	TestFramework.runOnce(new TestAssertTick());
-    }
+    
 
     /**
      * Tests that {@link #getTick()} works correctly.
      */
-    class TestGetTick extends MultithreadedTestCase {
+    public static class TestGetTick extends MultithreadedJUnit4TestCase {
+    	@Threaded
     	public void thread1() {
     		waitForTick(1);
     		assertEquals(1, getTick());
@@ -68,9 +83,11 @@ public class TimingTest extends TestCase {
     		waitForTick(2);
     		assertEquals(2, getTick());
     	}
+    	
+    	@Test
+    	public void testGetTick() {
+        	// this space left intentionally blank
+        }
     }
 
-    public void testGetTick() throws Throwable {
-    	TestFramework.runOnce(new TestGetTick());
-    }
 }

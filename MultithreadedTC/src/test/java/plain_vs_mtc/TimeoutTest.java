@@ -1,17 +1,26 @@
 package plain_vs_mtc;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import edu.umd.cs.mtc.MultithreadedTestCase;
-import edu.umd.cs.mtc.TestFramework;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+
+import edu.umd.cs.mtc.MultithreadedJUnit4TestCase;
+import edu.umd.cs.mtc.Threaded;
 
 /** 
  * Timed offer times out if ArrayBlockingQueue is full and 
  * elements are not taken
  */
-public class TimeoutTest extends TestCase {
+@RunWith(Enclosed.class)
+public class TimeoutTest {
 	
 	/* NOTES
 	 * - Uses freezeClock to prevent clock from advancing
@@ -20,52 +29,58 @@ public class TimeoutTest extends TestCase {
 	
 	// Plain Version
 
-	volatile boolean threadFailed;
+	public static class PlainTimeoutTest {
+		volatile boolean threadFailed;
 
-	public void threadShouldThrow() {
-		threadFailed = true;
-		fail("should throw exception");
-	}
-
-	public void threadAssertFalse(boolean b) {
-		if (b) {
+		public void threadShouldThrow() {
 			threadFailed = true;
-			assertFalse(b);
+			fail("should throw exception");
 		}
-	}
 
-	protected void setUp() throws Exception {
-		threadFailed = false;
-	}
-
-	public void testTimedOffer() {
-		final ArrayBlockingQueue<Object> q = new ArrayBlockingQueue<Object>(2);
-		Thread t = new Thread(new Runnable() {    		
-			public void run() {
-				try {
-					q.put(new Object());
-					q.put(new Object());
-					threadAssertFalse(q.offer(new Object(), 25, TimeUnit.MILLISECONDS));
-					q.offer(new Object(), 2500, TimeUnit.MILLISECONDS);
-					threadShouldThrow();
-				} catch (InterruptedException success){}
+		public void threadAssertFalse(boolean b) {
+			if (b) {
+				threadFailed = true;
+				assertFalse(b);
 			}
-		});
+		}
 
-		try {
-			t.start();
-			Thread.sleep(50);
-			t.interrupt();
-			t.join();
-		} catch (Exception e) {
-			fail("Unexpected exception");
+		@Before
+		public void setUp() {
+			threadFailed = false;
+		}
+
+		@Test
+		public void testTimedOffer() {
+			final ArrayBlockingQueue<Object> q = new ArrayBlockingQueue<Object>(2);
+			Thread t = new Thread(new Runnable() {    		
+				public void run() {
+					try {
+						q.put(new Object());
+						q.put(new Object());
+						threadAssertFalse(q.offer(new Object(), 25, TimeUnit.MILLISECONDS));
+						q.offer(new Object(), 2500, TimeUnit.MILLISECONDS);
+						threadShouldThrow();
+					} catch (InterruptedException success){}
+				}
+			});
+
+			try {
+				t.start();
+				Thread.sleep(50);
+				t.interrupt();
+				t.join();
+			} catch (Exception e) {
+				fail("Unexpected exception");
+			}
+		}
+
+		@After
+		public void tearDown() {
+			assertFalse(threadFailed);
 		}
 	}
-
-	protected void tearDown() throws Exception {
-		assertFalse(threadFailed);
-	}
-
+	
+	
 
 	// MTC Version
 
@@ -74,13 +89,15 @@ public class TimeoutTest extends TestCase {
 	 * is interrupted. Use `freezeClock` to prevent the clock from advancing
 	 * during the first offer.
 	 */
-	class MTCTimedOffer extends MultithreadedTestCase {
+	public static class MTCTimedOffer extends MultithreadedJUnit4TestCase {
 		ArrayBlockingQueue<Object> q;
 
-		@Override public void initialize() {
+		@Before
+		public void initialize() {
 			q = new ArrayBlockingQueue<Object>(2);
 		}
 
+		@Threaded
 		public void thread1() {
 			try {
 				q.put(new Object());
@@ -95,13 +112,16 @@ public class TimeoutTest extends TestCase {
 			} catch (InterruptedException success){ assertTick(1); }
 		}
 
+		@Threaded
 		public void thread2() {
 			waitForTick(1);
 			getThread(1).interrupt();
 		}
+		
+		@Test
+		public void testMTCTimedOffer() {
+			// this space left intentionally blank
+		}
 	}
 
-	public void testMTCTimedOffer() throws Throwable {
-		TestFramework.runOnce( new MTCTimedOffer() );
-	}
 }

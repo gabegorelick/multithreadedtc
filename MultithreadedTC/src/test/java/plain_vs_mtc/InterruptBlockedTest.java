@@ -1,15 +1,24 @@
 package plain_vs_mtc;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
 import java.util.concurrent.Semaphore;
 
-import edu.umd.cs.mtc.MultithreadedTestCase;
-import edu.umd.cs.mtc.TestFramework;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+
+import edu.umd.cs.mtc.MultithreadedJUnit4TestCase;
+import edu.umd.cs.mtc.Threaded;
 
 /**
  * Test that a waiting acquire blocks interruptibly
  */
-public class InterruptBlockedTest extends TestCase {
+@RunWith(Enclosed.class)
+public class InterruptBlockedTest {
 
 	/* NOTES
 	 * - Failures in threads require additional work in setup and teardown
@@ -21,51 +30,60 @@ public class InterruptBlockedTest extends TestCase {
 	 */
 	
 	// Plain Version
+	
+	public static class PlainInterruptBlockedTest {
+		volatile boolean threadFailed;
 
-	volatile boolean threadFailed;
+		public void threadShouldThrow() {
+			threadFailed = true;
+			fail("should throw exception");
+		}
 
-	public void threadShouldThrow() {
-		threadFailed = true;
-		fail("should throw exception");
-	}
+		@Before
+		public void setUp() {
+			threadFailed = false;
+		}
 
-	protected void setUp() throws Exception {
-		threadFailed = false;
-	}
-
-	public void testInterruptedAcquire() {
-		final Semaphore s = new Semaphore(0);
-		Thread t = new Thread(new Runnable() {
-			public void run() {
-				try {
-					s.acquire();
-					threadShouldThrow();
-				} catch(InterruptedException success){}
+		@Test
+		public void testInterruptedAcquire() {
+			final Semaphore s = new Semaphore(0);
+			Thread t = new Thread(new Runnable() {
+				public void run() {
+					try {
+						s.acquire();
+						threadShouldThrow();
+					} catch(InterruptedException success){}
+				}
+			});
+			t.start();
+			try {
+				Thread.sleep(50);
+				t.interrupt();
+				t.join();
+			} catch(InterruptedException e){
+				fail("Unexpected exception");
 			}
-		});
-		t.start();
-		try {
-			Thread.sleep(50);
-			t.interrupt();
-			t.join();
-		} catch(InterruptedException e){
-			fail("Unexpected exception");
+		}
+
+		@After
+		public void tearDown() {
+			assertFalse(threadFailed);
 		}
 	}
 
-	protected void tearDown() throws Exception {
-		assertFalse(threadFailed);
-	}
-
+	
 
 	// MTC Version
 
-	class MTCInterruptedAcquire extends MultithreadedTestCase {
+	public static class MTCInterruptedAcquire extends MultithreadedJUnit4TestCase {
 		Semaphore s;
-		@Override public void initialize() {
+		
+		@Before
+		public void initialize() {
 			s = new Semaphore(0);
 		}
 
+		@Threaded
 		public void thread1() {
 			try {
 				s.acquire();
@@ -73,13 +91,17 @@ public class InterruptBlockedTest extends TestCase {
 			} catch(InterruptedException success){ assertTick(1); }
 		}
 
+		@Threaded
 		public void thread2() {
 			waitForTick(1); 
 			getThread(1).interrupt();
 		}
+		
+		@Test
+		public void testMTCInterruptedAcquire() {
+			// this space left intentionally blank
+		}
 	}
 
-	public void testMTCInterruptedAcquire() throws Throwable {
-		TestFramework.runOnce( new MTCInterruptedAcquire() );
-	}	
+		
 }

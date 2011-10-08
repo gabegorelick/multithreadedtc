@@ -1,41 +1,51 @@
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
-import edu.umd.cs.mtc.MultithreadedTestCase;
-import edu.umd.cs.mtc.TestFramework;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
 
+import edu.umd.cs.mtc.MultithreadedJUnit4TestCase;
+import edu.umd.cs.mtc.Threaded;
 
-public class SampleTest extends TestCase {
+@RunWith(Enclosed.class)
+public class SampleTest {
 
     // -- EXAMPLE 1 --
 	
-	class MTCBoundedBufferTest extends MultithreadedTestCase {
+	public static class MTCBoundedBufferTest extends MultithreadedJUnit4TestCase {
 		ArrayBlockingQueue<Integer> buf;
-		@Override public void initialize() {
+		
+		@Before
+		public void initialize() {
 			buf = new ArrayBlockingQueue<Integer>(1); 
 		}
 
+		@Threaded
 		public void threadPutPut() throws InterruptedException {
 			buf.put(42);
 			buf.put(17);
 			assertTick(1);
 		}
 
+		@Threaded
 		public void threadTakeTake() throws InterruptedException {
 			waitForTick(1);
 			assertTrue(buf.take() == 42);
 			assertTrue(buf.take() == 17);
 		}
 
-		@Override public void finish() {
+		@Test
+		public void testMTCBoundedBuffer() {
 			assertTrue(buf.isEmpty());
-		}		
+	    }
 	}
 	
-    public void testMTCBoundedBuffer() throws Throwable {
-    	TestFramework.runOnce( new MTCBoundedBufferTest() );
-    }
+    
     
     // -- EXAMPLE 2 --
     
@@ -45,33 +55,35 @@ public class SampleTest extends TestCase {
 	 * use the CountDownLatch version to demonstrate MTC's deadlock
 	 * detection capabilities.
 	 */
-	class MTCBoundedBufferDeadlockTest extends MultithreadedTestCase {
+	public static class MTCBoundedBufferDeadlockTest extends MultithreadedJUnit4TestCase {
 		ArrayBlockingQueue<Integer> buf;
 		CountDownLatch c;
 		
-		@Override public void initialize() {
+		@Before
+		public void initialize() {
+			setTrace(true);
 			buf = new ArrayBlockingQueue<Integer>(1); 
 			c = new CountDownLatch(1);
 		}
 
+		@Threaded
 		public void threadPutPut() throws InterruptedException {
 			buf.put(42);
 			buf.put(17);
 			c.countDown();
 		}
 
+		@Threaded
 		public void thread2() throws InterruptedException {
 			c.await();
 			assertEquals(Integer.valueOf(42), buf.take());
 			assertEquals(Integer.valueOf(17), buf.take());
 		}
+		
+		@Test(expected = IllegalStateException.class)
+		public void testMTCBoundedBufferDeadlock() {
+			// this space left intentionally blank
+	    }
 	}
-
-    public void testMTCBoundedBufferDeadlock() throws Throwable {
-		try {
-			TestFramework.runOnce( new MTCBoundedBufferDeadlockTest() );
-			fail("Test should throw an IllegalStateException");
-		} catch (IllegalStateException deadlockDetected) {}
-    }
     
 }

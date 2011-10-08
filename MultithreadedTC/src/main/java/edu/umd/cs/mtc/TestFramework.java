@@ -8,10 +8,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -264,12 +262,12 @@ public class TestFramework {
 			runLimit = Integer.getInteger(RUNLIMIT_KEY, DEFAULT_RUNLIMIT);			
 		
 		// prepare run data structures
-		Collection<Method> methods = getAllThreads(test);
+		ThreadedMethod[] methods = test.getThreadedMethods();
 		LinkedList<Thread> threads = new LinkedList<Thread>();
 		final Throwable[] error = new Throwable[1];
 		
 		// invoke initialize method before each run
-		test.initialize();
+		test.onInitialize();
 		test.setTick(0L);
 		
 		// invoke each thread method in a separate thread and place all threads in a
@@ -283,32 +281,9 @@ public class TestFramework {
 		waitForMethodThreads(threads, error);
 		
 		// invoke finish at the end of each run
-		test.finish();
+		test.onFinish();
 	}
 	
-	/**
-	 * Use reflection to get the thread methods in this test. Thread methods
-	 * start with the name "thread", have no parameters and return void
-	 * 
-	 * @param test
-	 * 			the test case from which to extract methods
-	 * @return
-	 * 			a collection of Method objects, one for each thread method
-	 */
-	private static Collection<Method> getAllThreads(MultithreadedTestCase test) {
-		Class c = test.getClass();
-
-		TreeMap<String, Method> result = new TreeMap<String, Method>();
-		for (Method m : c.getDeclaredMethods()) {
-
-			if (m.getName().startsWith("thread")
-					&& m.getParameterTypes().length == 0
-					&& m.getReturnType().equals(Void.TYPE))
-				result.put(m.getName(), m);
-		}
-		return result.values();
-	}
-
 	/**
 	 * Start and return a clock thread which periodically checks all the test case
 	 * threads and regulates them. 
@@ -564,45 +539,43 @@ public class TestFramework {
 	}
 
 	/**
-	 * Invoke each of the thread methods in a separate thread and 
-	 * place them all in a common (new) thread group. As a side-effect
-	 * all the threads are placed in the 'threads' LinkedList parameter,
-	 * and any errors detected are placed in the 'error' array parameter.
+	 * Invoke each of the thread methods in a separate thread and place them all
+	 * in a common (new) thread group. As a side-effect all the threads are
+	 * placed in the 'threads' LinkedList parameter, and any errors detected are
+	 * placed in the 'error' array parameter.
 	 * 
 	 * @param test
-	 * 			The test case containing the thread methods
+	 *            The test case containing the thread methods
 	 * @param methods
-	 * 			Collection of the methods to be invoked
+	 *            the methods to be invoked
 	 * @param threads
-	 * 			By the time this method returns, this parameter will
-	 * 			contain all the test case threads 
+	 *            By the time this method returns, this parameter will contain
+	 *            all the test case threads
 	 * @param error
-	 * 			By the time this method returns, this parameter will
-	 * 			contains the first error thrown by one of the threads.
-	 * @return
-	 * 			The thread group for all the newly created test case threads
+	 *            By the time this method returns, this parameter will contains
+	 *            the first error thrown by one of the threads.
+	 * @return The thread group for all the newly created test case threads
 	 */
-	private static ThreadGroup startMethodThreads(final MultithreadedTestCase test,
-			Collection<Method> methods, final LinkedList<Thread> threads,
-			final Throwable[] error) {
+	private static ThreadGroup startMethodThreads(final MultithreadedTestCase test, ThreadedMethod[] threadMethods,
+			final LinkedList<java.lang.Thread> threads, final Throwable[] error) {
 		ThreadGroup threadGroup = new ThreadGroup("MTC-Threads");
-		final CountDownLatch latch = new CountDownLatch(methods.size());
+		final CountDownLatch latch = new CountDownLatch(threadMethods.length);
 		final Semaphore waitForRegistration = new Semaphore(0);
 		final AtomicBoolean signalledError = new AtomicBoolean(false);
-		for (final Method m : methods) {
+		for (final ThreadedMethod threadMethod : threadMethods) {
 			Runnable r = new Runnable() {
 				public void run() {
 					try {
 						waitForRegistration.release();
 						latch.countDown();
 						latch.await();
-						
+
 						// At this point all threads are created and released
 						// (in random order?) together to run in parallel
-						
+
 						test.hello();
-						makeAccessible(m);
-						m.invoke(test);
+						makeAccessible(threadMethod.getMethod());
+						threadMethod.getMethod().invoke(test);
 					} catch (InvocationTargetException e) {
 						Throwable cause = e.getCause();
 						if (cause instanceof ThreadDeath)
@@ -610,26 +583,27 @@ public class TestFramework {
 						if (error[0] == null) {
 							error[0] = cause;
 						}
-						if (signalledError.compareAndSet(false, true)) signalError(threads);
+						if (signalledError.compareAndSet(false, true))
+							signalError(threads);
 					} catch (ThreadDeath e) {
 						// ignore it
 					} catch (Throwable e) {
-						System.out.println(Thread.currentThread().getName() + " caught " + e.getMessage());
+						System.out.println(java.lang.Thread.currentThread().getName() + " caught " + e.getMessage());
 						if (error[0] == null)
 							error[0] = e;
-						if (signalledError.compareAndSet(false, true))  signalError(threads);
+						if (signalledError.compareAndSet(false, true))
+							signalError(threads);
 					} finally {
 						test.goodbye();
 					}
 				}
 			};
-			String threadName = "thread " + m.getName().substring(6);
-			Thread t = new Thread(threadGroup, r, threadName);
+			java.lang.Thread t = new java.lang.Thread(threadGroup, r, threadMethod.getName());
 			threads.add(t);
-			
+
 			// add thread to map of method threads, mapped by name
-			test.putThread(m.getName(), t);
-			
+			test.putThread(t.getName(), t);
+
 			t.start();
 			waitForRegistration.acquireUninterruptibly();
 		}
